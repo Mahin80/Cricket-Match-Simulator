@@ -25,7 +25,6 @@ Cricket-Match-Simulator/
 ├── team2.txt             # Team 2 players and stats
 ├── Configuration.txt     # Number of overs
 ├── Savefile.txt          # (Generated) Match summary
-└── README.md             # Project documentation
 ```
 
 ---
