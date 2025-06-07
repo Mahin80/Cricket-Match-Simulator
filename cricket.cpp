@@ -4,6 +4,7 @@
 #include<Windows.h>
 #include<cstring>
 #include<conio.h>
+#include <iomanip>
 using namespace std;
 
 const int max_players = 7;
@@ -130,8 +131,8 @@ bool scorecard(int N, int wData[max_players][5], int strike, int ball, int onbat
 void BatsmanGotOut(string batsmanName, int batsmanScore, int ballsfaced, int fours, int sixes);
 void TotalScore(int runBat[max_players], int overs, int wickets, int ball);
 void FallOfWickets(int wickets, int wData[max_players][5], char teamBowl[max_players][25]);
-void BattingBoard(char teamBat[max_players][25], int wickets, int ballfaced[max_players], int runBat[max_players], int fours[max_players], int sixes[max_players], char teamBowl[max_players][25], int wData[max_players][5]);
-void BowlingBoard(char teamBowl[max_players][25], int ballbowled[max_players], int runBowl[max_players], int wicketsBowl[max_players], int ball);
+void BattingBoard(char teamBat[max_players][25], int wickets, int ballfaced[max_players], int runBat[max_players], int fours[max_players], int sixes[max_players], char teamBowl[max_players][25], int wData[max_players][5], int onbat[2]);
+void BowlingBoard(char teamBowl[max_players][25], int ballbowled[max_players], int runBowl[max_players], int wicketsBowl[max_players], int ball, int bowler);
 int Innings(int totalNoOfOvers, char teamBat[max_players][25], int runBat[max_players], int ballfaced[max_players], char teamBowl[max_players][25], int ballbowled[max_players], int runBowl[max_players], int wicketsBowl[max_players], int target = 0)
 {
 
@@ -413,10 +414,11 @@ bool scorecard(int totalNoOfOvers, int wData[max_players][5], int strike, int ba
 			//}
 			//cout << "Innings 2" << "\t Target: " << target << "\t Remaining Score= " << target - ts << "\t Remaining Overs= " << totalNoOfOvers - overs << endl;
 	}
-	BattingBoard(teamBat, wickets, ballfaced, runBat, fours, sixes, teamBowl, wData);
+	// Pass onbat to BattingBoard
+	BattingBoard(teamBat, wickets, ballfaced, runBat, fours, sixes, teamBowl, wData, onbat);
 	TotalScore(runBat, overs, wickets, ball);
 	FallOfWickets(wickets, wData, teamBowl);
-	BowlingBoard(teamBowl, ballbowled, runBowl, wicketsBowl, ball);
+	BowlingBoard(teamBowl, ballbowled, runBowl, wicketsBowl, ball, bowler); // pass bowler here
 	if (isSecondInnings) {
 		if ((ts > target) && (Oversbowled(overs, ball) >= totalNoOfOvers)) {
 			cout << "\n\n *********************** Match Tied!! ***************************** \n\n";
@@ -463,13 +465,17 @@ void TotalScore(int runBat[max_players], int overs, int wickets, int ball)
 	cout << "\nTOTAL \t OVERS: " << Oversbowled(overs, ball) << "\t RR: " << ((ts * 6) * 1.0) / (overs * 6 + ball) * 1.0 << "\t" << ts << "/" << wickets << endl;
 	cout << endl;
 }
-void BattingBoard(char teamBat[max_players][25], int wickets, int ballfaced[max_players], int runBat[max_players], int fours[max_players], int sixes[max_players], char teamBowl[max_players][25], int wData[max_players][5])
+void BattingBoard(char teamBat[max_players][25], int wickets, int ballfaced[max_players], int runBat[max_players], int fours[max_players], int sixes[max_players], char teamBowl[max_players][25], int wData[max_players][5], int onbat[2])
 {
 	float sRate = 0.0;
-	cout << "Batting \t\t Runs \t Balls \t 4s \t 6s \t SR " << endl;
-	for (int i = 0; i < wickets + 2; i++)
+	cout << "\n***************** Batting *****************\n";
+	cout << left << setw(22) << "Batting" << setw(8) << "Runs" << setw(8) << "Balls" << setw(8) << "4s" << setw(8) << "6s" << setw(8) << "SR" << endl;
+	for (int i = 0; i < max_players; i++)
 	{
+		// Check if this player is currently batting
+		bool isOnStrike = (i == onbat[0] || i == onbat[1]);
 		if (ballfaced[i] > 0)
+		
 		{
 			sRate = ((runBat[i] * 1.0) / ballfaced[i]) * 100;
 		}
@@ -477,23 +483,34 @@ void BattingBoard(char teamBat[max_players][25], int wickets, int ballfaced[max_
 		{
 			sRate = 0;
 		}
-		cout << teamBat[i] << "\t\t   " << runBat[i] << "\t" << ballfaced[i] << "\t" << fours[i] << "\t" << sixes[i] << "\t" << sRate << endl;
-
+		cout << left << setw(22) << (string(teamBat[i]) + (isOnStrike ? " *" : ""))
+             << setw(8) << runBat[i]
+             << setw(8) << ballfaced[i]
+             << setw(8) << fours[i]
+             << setw(8) << sixes[i]
+             << setw(8) << fixed << setprecision(0) << sRate
+             << endl;
 	}
 }
-void BowlingBoard(char teamBowl[max_players][25], int ballbowled[max_players], int runBowl[max_players], int wicketsBowl[max_players], int ball)
+void BowlingBoard(char teamBowl[max_players][25], int ballbowled[max_players], int runBowl[max_players], int wicketsBowl[max_players], int ball, int bowler)
 {
 
-	cout << endl;
-	cout << "Bowling \t\t O \t R \t W \t Eco." << endl;
+	cout << "\n***************** Bowling *****************\n";
+	cout << left << setw(22) << "Bowling" << setw(8) << "O" << setw(8) << "R" << setw(8) << "W" << setw(8) << "Eco." << endl;
 	float eConomy = 0.0;
-	for (int i = 6; i >= 2; i--)
+	for (int i = 2; i < max_players; i++)
 	{
 		if (ballbowled[i] > 0)
 			eConomy = (runBowl[i] * 6.0) / ballbowled[i];
 		else
 			eConomy = 0;
-		cout << teamBowl[i] << "\t\t" << ballbowled[i] / 6 << "." << ballbowled[i] % 6 << "\t" << runBowl[i] << "\t" << wicketsBowl[i] << "\t" << eConomy << endl;
+
+		cout << left << setw(22) << (string(teamBowl[i]) + (i == bowler ? " *" : ""))
+             << setw(8) << (to_string(ballbowled[i] / 6) + "." + to_string(ballbowled[i] % 6))
+             << setw(8) << runBowl[i]
+             << setw(8) << wicketsBowl[i]
+             << setw(8) << fixed << setprecision(2) << eConomy
+             << endl;
 	}
 
 }
@@ -508,5 +525,3 @@ void BatsmanGotOut(string batsmanName, int batsmanScore, int ballsfaced, int fou
 
 
 }
-
-
